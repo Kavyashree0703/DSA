@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to represent a hash table entry
+typedef struct HashEntry {
+    char key[20];
+    int value;
+    struct HashEntry* next;
+} HashEntry;
+
+// Structure to represent a hash table
+typedef struct HashTable {
+    int size;
+    HashEntry** table;
+} HashTable;
+
+// Hash function to determine the initial index
+int hashFunction(char* key, int size) {
+    int sum = 0;
+    for (int i = 0; i < strlen(key); i++) {
+        sum += key[i];
+    }
+    return sum % size;
+}
+
+// Open Addressing with Linear Probing
+void openAddressingLinearProbing(HashTable* table, char* key, int value) {
+    int index = hashFunction(key, table->size);
+    while (table->table[index] != NULL) {
+        if (strcmp(table->table[index]->key, key) == 0) {
+            // Key already exists, update value
+            table->table[index]->value = value;
+            return;
+        }
+        index = (index + 1) % table->size;
+    }
+    // Insert new entry
+    HashEntry* entry = (HashEntry*)malloc(sizeof(HashEntry));
+    strcpy(entry->key, key);
+    entry->value = value;
+    entry->next = NULL;
+    table->table[index] = entry;
+}
+
+// Open Addressing with Quadratic Probing
+void openAddressingQuadraticProbing(HashTable* table, char* key, int value) {
+    int index = hashFunction(key, table->size);
+    int i = 1;
+    while (table->table[index] != NULL) {
+        if (strcmp(table->table[index]->key, key) == 0) {
+            // Key already exists, update value
+            table->table[index]->value = value;
+            return;
+        }
+        index = (index + i * i) % table->size;
+        i++;
+    }
+    // Insert new entry
+    HashEntry* entry = (HashEntry*)malloc(sizeof(HashEntry));
+    strcpy(entry->key, key);
+    entry->value = value;
+    entry->next = NULL;
+    table->table[index] = entry;
+}
+
+// Open Addressing with Double Hashing
+void openAddressingDoubleHashing(HashTable* table, char* key, int value) {
+    int index = hashFunction(key, table->size);
+    int step = 7 - (index % 7);
+    while (table->table[index] != NULL) {
+        if (strcmp(table->table[index]->key, key) == 0) {
+            // Key already exists, update value
+            table->table[index]->value = value;
+            return;
+        }
+        index = (index + step) % table->size;
+    }
+    // Insert new entry
+    HashEntry* entry = (HashEntry*)malloc(sizeof(HashEntry));
+    strcpy(entry->key, key);
+    entry->value = value;
+    entry->next = NULL;
+    table->table[index] = entry;
+}
+
+// Closed Addressing (Chaining)
+void closedAddressingChaining(HashTable* table, char* key, int value) {
+    int index = hashFunction(key, table->size);
+    HashEntry* entry = table->table[index];
+    while (entry != NULL) {
+        if (strcmp(entry->key, key) == 0) {
+            // Key already exists, update value
+            entry->value = value;
+            return;
+        }
+        entry = entry->next;
+    }
+    // Insert new entry
+    entry = (HashEntry*)malloc(sizeof(HashEntry));
+    strcpy(entry->key, key);
+    entry->value = value;
+    entry->next = table->table[index];
+    table->table[index] = entry;
+}
+
+// Rehashing
+void rehashing(HashTable* table) {
+    int newSize = table->size * 2;
+    HashEntry** newTable = (HashEntry**)malloc(newSize * sizeof(HashEntry*));
+    for (int i = 0; i < newSize; i++) {
+        newTable[i] = NULL;
+    }
+    for (int i = 0; i < table->size; i++) {
+        HashEntry* entry = table->table[i];
+        while (entry != NULL) {
+            int newIndex = hashFunction(entry->key, newSize);
+            HashEntry* newEntry = (HashEntry*)malloc(sizeof(HashEntry));
+            strcpy(newEntry->key, entry->key);
+            newEntry->value = entry->value;
+            newEntry->next = newTable[newIndex];
+            newTable[newIndex] = newEntry;
+            entry = entry->next;
+       
